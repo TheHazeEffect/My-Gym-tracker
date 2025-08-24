@@ -1,41 +1,44 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'workout.dart';
+part of 'workout_session.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class WorkoutAdapter extends TypeAdapter<Workout> {
+class WorkoutSessionAdapter extends TypeAdapter<WorkoutSession> {
   @override
-  final int typeId = 0;
+  final int typeId = 4;
 
   @override
-  Workout read(BinaryReader reader) {
+  WorkoutSession read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Workout(
-      name: fields[0] as String,
-      date: fields[1] as DateTime,
-      duration: fields[2] as int,
+    return WorkoutSession(
+      id: fields[0] as String,
+      startTime: fields[1] as DateTime,
+      endTime: fields[2] as DateTime?,
       exercises: (fields[3] as List).cast<Exercise>(),
+      isCompleted: fields[4] as bool,
     );
   }
 
   @override
-  void write(BinaryWriter writer, Workout obj) {
+  void write(BinaryWriter writer, WorkoutSession obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
-      ..write(obj.name)
+      ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.date)
+      ..write(obj.startTime)
       ..writeByte(2)
-      ..write(obj.duration)
+      ..write(obj.endTime)
       ..writeByte(3)
-      ..write(obj.exercises);
+      ..write(obj.exercises)
+      ..writeByte(4)
+      ..write(obj.isCompleted);
   }
 
   @override
@@ -44,7 +47,7 @@ class WorkoutAdapter extends TypeAdapter<Workout> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is WorkoutAdapter &&
+      other is WorkoutSessionAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

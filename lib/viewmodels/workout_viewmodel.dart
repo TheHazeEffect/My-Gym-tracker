@@ -11,4 +11,9 @@ class WorkoutViewModel extends ChangeNotifier {
     _workoutBox.add(workout);
     notifyListeners();
   }
+
+  void updateWorkout(int index, Workout updatedWorkout) {
+    _workoutBox.putAt(index, updatedWorkout);
+    notifyListeners();
+  }
 }
