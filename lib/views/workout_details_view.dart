@@ -53,7 +53,9 @@ class WorkoutDetailsView extends StatelessWidget {
                     
                     if (shouldCancel == true) {
                       sessionViewModel.cancelWorkout();
-                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      if (context.mounted) {
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                      }
                     }
                   }
                 },
@@ -85,6 +87,97 @@ class WorkoutDetailsView extends StatelessWidget {
           ),
           body: Column(
             children: [
+              // Active Timers Display
+              Consumer<RestTimerViewModel>(
+                builder: (context, timerViewModel, child) {
+                  final activeTimers = timerViewModel.timers
+                      .where((timer) => 
+                          timer.state == TimerState.running || 
+                          timer.state == TimerState.paused)
+                      .toList();
+                  
+                  if (activeTimers.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  
+                  return Container(
+                    margin: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0),
+                    child: Column(
+                      children: activeTimers.map((timer) => Card(
+                        color: timer.state == TimerState.running 
+                            ? Colors.white 
+                            : Colors.orange.shade50,
+                        elevation: 2,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: timer.state == TimerState.running
+                                ? Border.all(color: Colors.green.shade600, width: 2)
+                                : Border.all(color: Colors.orange.shade400, width: 1),
+                          ),
+                          child: ListTile(
+                            dense: true,
+                            leading: Icon(
+                              timer.state == TimerState.running 
+                                  ? Icons.timer 
+                                  : Icons.pause_circle_outline,
+                              color: timer.state == TimerState.running 
+                                  ? Colors.green.shade700 
+                                  : Colors.orange.shade700,
+                            ),
+                            title: Text(
+                              timer.name,
+                              style: TextStyle(
+                                fontSize: 14, 
+                                fontWeight: FontWeight.w500,
+                                color: timer.state == TimerState.running 
+                                    ? Colors.green.shade800 
+                                    : Colors.orange.shade800,
+                              ),
+                            ),
+                            subtitle: Text(
+                              timerViewModel.formatTime(timer.remainingTime),
+                              style: TextStyle(
+                                fontSize: 16, 
+                                fontWeight: FontWeight.bold,
+                                color: timer.state == TimerState.running 
+                                    ? Colors.green.shade700 
+                                    : Colors.orange.shade700,
+                              ),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  iconSize: 20,
+                                  icon: Icon(
+                                    timer.state == TimerState.running 
+                                        ? Icons.pause 
+                                        : Icons.play_arrow,
+                                  ),
+                                  onPressed: () {
+                                    if (timer.state == TimerState.running) {
+                                      timerViewModel.pauseTimer(timer.id);
+                                    } else {
+                                      timerViewModel.resumeTimer(timer.id);
+                                    }
+                                  },
+                                ),
+                                IconButton(
+                                  iconSize: 20,
+                                  icon: const Icon(Icons.stop),
+                                  onPressed: () => timerViewModel.stopTimer(timer.id),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )).toList(),
+                    ),
+                  );
+                },
+              ),
+              // Workout Info Section
               Container(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -117,9 +210,22 @@ class WorkoutDetailsView extends StatelessWidget {
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _showAddExerciseDialog(context, sessionViewModel),
-            child: const Icon(Icons.add),
+          floatingActionButton: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FloatingActionButton(
+                heroTag: "timer",
+                onPressed: () => _showTimerDialog(context),
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                child: const Icon(Icons.timer),
+              ),
+              const SizedBox(height: 10),
+              FloatingActionButton(
+                heroTag: "add",
+                onPressed: () => _showAddExerciseDialog(context, sessionViewModel),
+                child: const Icon(Icons.add),
+              ),
+            ],
           ),
         );
       },
@@ -139,6 +245,85 @@ class WorkoutDetailsView extends StatelessWidget {
           historicalExercises: sessionViewModel.historicalExercises,
           onAdd: (exercise) =>
               sessionViewModel.addExerciseToCurrentWorkout(exercise),
+        ),
+      ),
+    );
+  }
+
+  void _showTimerDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Start Rest Timer'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Select timer duration:'),
+            SizedBox(height: 16),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _startTimer(context, 'General Rest', 60);
+              Navigator.of(context).pop();
+            },
+            child: const Text('1 min'),
+          ),
+          TextButton(
+            onPressed: () {
+              _startTimer(context, 'General Rest', 180);
+              Navigator.of(context).pop();
+            },
+            child: const Text('3 min'),
+          ),
+          TextButton(
+            onPressed: () {
+              _startTimer(context, 'General Rest', 300);
+              Navigator.of(context).pop();
+            },
+            child: const Text('5 min'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const RestTimerView()),
+              );
+            },
+            child: const Text('Custom'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _startTimer(BuildContext context, String name, int seconds) {
+    final timerViewModel = Provider.of<RestTimerViewModel>(
+      context,
+      listen: false,
+    );
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    
+    timerViewModel.startTimer(name, seconds);
+    
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text('Started ${seconds ~/ 60} min timer'),
+        action: SnackBarAction(
+          label: 'View',
+          onPressed: () {
+            navigator.push(
+              MaterialPageRoute(
+                builder: (context) => const RestTimerView(),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -259,12 +444,6 @@ class _ExerciseCardState extends State<ExerciseCard> {
                     onPressed: _removeLastSet,
                     child: const Text('Remove Set'),
                   ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: _showQuickTimer,
-                  icon: const Icon(Icons.timer),
-                  label: const Text('Timer'),
-                ),
               ],
             ),
           ],
@@ -312,78 +491,6 @@ class _ExerciseCardState extends State<ExerciseCard> {
         secondaryMuscleGroup: widget.exercise.secondaryMuscleGroup,
         tertiaryMuscleGroup: widget.exercise.tertiaryMuscleGroup,
       ),
-    );
-  }
-
-  void _showQuickTimer() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Start Rest Timer'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Start rest timer for ${widget.exercise.name}?'),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildQuickTimerButton(context, '1 min', 60),
-                _buildQuickTimerButton(context, '3 min', 180),
-                _buildQuickTimerButton(context, '5 min', 300),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const RestTimerView()),
-              );
-            },
-            child: const Text('Open Timer View'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickTimerButton(
-    BuildContext context,
-    String label,
-    int seconds,
-  ) {
-    return ElevatedButton(
-      onPressed: () {
-        final timerViewModel = Provider.of<RestTimerViewModel>(
-          context,
-          listen: false,
-        );
-        timerViewModel.startQuickTimer('${widget.exercise.name} Rest', seconds);
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Started $label timer for ${widget.exercise.name}'),
-            action: SnackBarAction(
-              label: 'View',
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const RestTimerView(),
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      },
-      child: Text(label),
     );
   }
 }
@@ -550,21 +657,27 @@ class _AddExerciseToWorkoutFormState extends State<AddExerciseToWorkoutForm> {
             Row(
               children: [
                 Expanded(
-                  child: RadioListTile<bool>(
+                  child: ListTile(
                     title: const Text('Historical Exercise'),
-                    value: false,
-                    groupValue: _isNewExercise,
-                    onChanged: (value) =>
-                        setState(() => _isNewExercise = value!),
+                    leading: Radio<bool>(
+                      value: false,
+                      groupValue: _isNewExercise,
+                      onChanged: (value) =>
+                          setState(() => _isNewExercise = value!),
+                    ),
+                    onTap: () => setState(() => _isNewExercise = false),
                   ),
                 ),
                 Expanded(
-                  child: RadioListTile<bool>(
+                  child: ListTile(
                     title: const Text('New Exercise'),
-                    value: true,
-                    groupValue: _isNewExercise,
-                    onChanged: (value) =>
-                        setState(() => _isNewExercise = value!),
+                    leading: Radio<bool>(
+                      value: true,
+                      groupValue: _isNewExercise,
+                      onChanged: (value) =>
+                          setState(() => _isNewExercise = value!),
+                    ),
+                    onTap: () => setState(() => _isNewExercise = true),
                   ),
                 ),
               ],

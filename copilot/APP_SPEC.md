@@ -39,3 +39,4 @@ Additional Details: How I expect to use the app.
 
 
 - I should be able to see my past workouts in the workout section, It starts by showing me a calender where I can swipe between months to see all the workouts in that month both in a list below as well as as highlights on the calendar, where i could even select a day to see only the workouts on that day. selecitng the day again remove the day filter and goes back to showing me all the workouts in that month
+

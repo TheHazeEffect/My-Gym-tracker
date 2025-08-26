@@ -18,7 +18,7 @@ class _ProgressViewState extends State<ProgressView> {
   String? selectedExercise;
   final TextEditingController _searchController = TextEditingController();
   List<String> filteredExercises = [];
-  
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -32,7 +32,10 @@ class _ProgressViewState extends State<ProgressView> {
         selectedExercise = null;
       } else {
         filteredExercises = allExercises
-            .where((exercise) => exercise.toLowerCase().contains(query.toLowerCase()))
+            .where(
+              (exercise) =>
+                  exercise.toLowerCase().contains(query.toLowerCase()),
+            )
             .toList();
       }
     });
@@ -57,35 +60,46 @@ class _ProgressViewState extends State<ProgressView> {
       body: Consumer<WorkoutSessionViewModel>(
         builder: (context, sessionViewModel, child) {
           final exerciseNames = sessionViewModel.historicalExercises;
-          
+
           return Column(
             children: [
               if (exerciseNames.isNotEmpty)
                 Container(
-                  color: Colors.green.shade50,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.green.shade300,
+                        width: 1,
+                      ),
+                    ),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: _buildSearchSection(exerciseNames, sessionViewModel),
                   ),
                 ),
-              
+
               if (selectedExercise != null)
                 Expanded(
                   flex: 2,
-                  child: _buildWeightProgressionChart(sessionViewModel, selectedExercise!),
+                  child: _buildWeightProgressionChart(
+                    sessionViewModel,
+                    selectedExercise!,
+                  ),
                 ),
-              
+
               if (selectedExercise != null)
                 Expanded(
                   flex: 3,
-                  child: _buildExerciseProgressHistory(sessionViewModel, selectedExercise!),
+                  child: _buildExerciseProgressHistory(
+                    sessionViewModel,
+                    selectedExercise!,
+                  ),
                 ),
-              
+
               if (selectedExercise == null)
-                Expanded(
-                  flex: 3,
-                  child: _buildPersonalRecords(),
-                ),
+                Expanded(flex: 3, child: _buildPersonalRecords()),
             ],
           );
         },
@@ -93,7 +107,10 @@ class _ProgressViewState extends State<ProgressView> {
     );
   }
 
-  Widget _buildSearchSection(List<String> exerciseNames, WorkoutSessionViewModel sessionViewModel) {
+  Widget _buildSearchSection(
+    List<String> exerciseNames,
+    WorkoutSessionViewModel sessionViewModel,
+  ) {
     return Column(
       children: [
         TextField(
@@ -128,7 +145,7 @@ class _ProgressViewState extends State<ProgressView> {
           ),
           onChanged: (query) => _filterExercises(query, exerciseNames),
         ),
-        
+
         // Search Results
         if (filteredExercises.isNotEmpty)
           Container(
@@ -141,24 +158,30 @@ class _ProgressViewState extends State<ProgressView> {
             child: Column(
               children: filteredExercises.take(5).map((exercise) {
                 return ListTile(
-                  title: Text(exercise, style: TextStyle(color: Colors.grey.shade800)),
-                  leading: Icon(Icons.fitness_center, color: Colors.green.shade700),
+                  title: Text(
+                    exercise,
+                    style: TextStyle(color: Colors.grey.shade800),
+                  ),
+                  leading: Icon(
+                    Icons.fitness_center,
+                    color: Colors.green.shade700,
+                  ),
                   onTap: () => _selectExercise(exercise),
                   dense: true,
                 );
               }).toList(),
             ),
           ),
-          
+
         // Selected Exercise Indicator
         if (selectedExercise != null)
           Container(
             margin: const EdgeInsets.only(top: 12.0),
             padding: const EdgeInsets.all(12.0),
             decoration: BoxDecoration(
-              color: Colors.green.shade100,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(8.0),
-              border: Border.all(color: Colors.green.shade300),
+              border: Border.all(color: Colors.green.shade600, width: 2),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,7 +199,10 @@ class _ProgressViewState extends State<ProgressView> {
                     ),
                   ],
                 ),
-                if (_getMuscleGroupInfo(sessionViewModel, selectedExercise!).isNotEmpty)
+                if (_getMuscleGroupInfo(
+                  sessionViewModel,
+                  selectedExercise!,
+                ).isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Text(
@@ -195,26 +221,30 @@ class _ProgressViewState extends State<ProgressView> {
     );
   }
 
-  Widget _buildWeightProgressionChart(WorkoutSessionViewModel viewModel, String exerciseName) {
+  Widget _buildWeightProgressionChart(
+    WorkoutSessionViewModel viewModel,
+    String exerciseName,
+  ) {
     // Get weight progression data over time
     final progressionData = <Map<String, dynamic>>[];
     final seenSessions = <String>{};
-    
+
     for (var session in viewModel.completedSessions) {
       if (seenSessions.contains(session.id)) continue;
-      
+
       ExerciseSet? sessionMaxSet;
       for (var exercise in session.exercises) {
         if (exercise.name == exerciseName && exercise.sets.isNotEmpty) {
           final exerciseMaxSet = exercise.maxWeightSet;
           if (exerciseMaxSet != null) {
-            if (sessionMaxSet == null || exerciseMaxSet.weight > sessionMaxSet.weight) {
+            if (sessionMaxSet == null ||
+                exerciseMaxSet.weight > sessionMaxSet.weight) {
               sessionMaxSet = exerciseMaxSet;
             }
           }
         }
       }
-      
+
       if (sessionMaxSet != null) {
         progressionData.add({
           'date': session.startTime,
@@ -224,9 +254,11 @@ class _ProgressViewState extends State<ProgressView> {
         seenSessions.add(session.id);
       }
     }
-    
-    progressionData.sort((a, b) => (a['date'] as DateTime).compareTo(b['date'] as DateTime));
-    
+
+    progressionData.sort(
+      (a, b) => (a['date'] as DateTime).compareTo(b['date'] as DateTime),
+    );
+
     if (progressionData.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16.0),
@@ -238,13 +270,16 @@ class _ProgressViewState extends State<ProgressView> {
         ),
       );
     }
-    
+
     final spots = progressionData
         .asMap()
         .entries
-        .map((entry) => FlSpot(entry.key.toDouble(), entry.value['weight'] as double))
+        .map(
+          (entry) =>
+              FlSpot(entry.key.toDouble(), entry.value['weight'] as double),
+        )
         .toList();
-    
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -260,9 +295,9 @@ class _ProgressViewState extends State<ProgressView> {
           const SizedBox(height: 8),
           Text(
             'Maximum weight lifted over time',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey.shade600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
           ),
           const SizedBox(height: 16),
           Expanded(
@@ -278,10 +313,11 @@ class _ProgressViewState extends State<ProgressView> {
                       show: true,
                       getDotPainter: (spot, percent, barData, index) {
                         final dataIndex = spot.x.toInt();
-                        final reps = dataIndex >= 0 && dataIndex < progressionData.length
+                        final reps =
+                            dataIndex >= 0 && dataIndex < progressionData.length
                             ? progressionData[dataIndex]['reps'] as int
                             : 0;
-                        
+
                         return _RepCountDotPainter(
                           radius: 12,
                           color: Colors.green.shade600,
@@ -301,7 +337,10 @@ class _ProgressViewState extends State<ProgressView> {
                       getTitlesWidget: (value, meta) {
                         return Text(
                           '${value.toInt()}kg',
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                          ),
                         );
                       },
                     ),
@@ -313,18 +352,26 @@ class _ProgressViewState extends State<ProgressView> {
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
                         if (index >= 0 && index < progressionData.length) {
-                          final date = progressionData[index]['date'] as DateTime;
+                          final date =
+                              progressionData[index]['date'] as DateTime;
                           return Text(
                             '${date.month}/${date.day}',
-                            style: TextStyle(fontSize: 10, color: Colors.grey.shade700),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade700,
+                            ),
                           );
                         }
                         return const Text('');
                       },
                     ),
                   ),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(
                   show: true,
@@ -334,10 +381,8 @@ class _ProgressViewState extends State<ProgressView> {
                   show: true,
                   drawVerticalLine: false,
                   horizontalInterval: null,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.green.shade200,
-                    strokeWidth: 1,
-                  ),
+                  getDrawingHorizontalLine: (value) =>
+                      FlLine(color: Colors.green.shade200, strokeWidth: 1),
                 ),
                 lineTouchData: LineTouchData(
                   touchTooltipData: LineTouchTooltipData(
@@ -367,23 +412,27 @@ class _ProgressViewState extends State<ProgressView> {
     );
   }
 
-  Widget _buildExerciseProgressHistory(WorkoutSessionViewModel viewModel, String exerciseName) {
+  Widget _buildExerciseProgressHistory(
+    WorkoutSessionViewModel viewModel,
+    String exerciseName,
+  ) {
     // Get all completed sessions with this exercise
     final sessionsWithExercise = <Map<String, dynamic>>[];
     final seenSessions = <String>{};
-    
+
     for (var session in viewModel.completedSessions) {
       if (seenSessions.contains(session.id)) continue;
-      
+
       ExerciseSet? sessionMaxSet;
       var totalSets = 0;
       var totalVolume = 0.0;
-      
+
       for (var exercise in session.exercises) {
         if (exercise.name == exerciseName && exercise.sets.isNotEmpty) {
           final exerciseMaxSet = exercise.maxWeightSet;
           if (exerciseMaxSet != null) {
-            if (sessionMaxSet == null || exerciseMaxSet.weight > sessionMaxSet.weight) {
+            if (sessionMaxSet == null ||
+                exerciseMaxSet.weight > sessionMaxSet.weight) {
               sessionMaxSet = exerciseMaxSet;
             }
           }
@@ -391,7 +440,7 @@ class _ProgressViewState extends State<ProgressView> {
           totalVolume += exercise.volume;
         }
       }
-      
+
       if (sessionMaxSet != null) {
         sessionsWithExercise.add({
           'date': session.startTime,
@@ -403,9 +452,11 @@ class _ProgressViewState extends State<ProgressView> {
         seenSessions.add(session.id);
       }
     }
-    
-    sessionsWithExercise.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
-    
+
+    sessionsWithExercise.sort(
+      (a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime),
+    );
+
     if (sessionsWithExercise.isEmpty) {
       return Center(
         child: Text(
@@ -414,7 +465,7 @@ class _ProgressViewState extends State<ProgressView> {
         ),
       );
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -422,9 +473,9 @@ class _ProgressViewState extends State<ProgressView> {
           padding: const EdgeInsets.all(16.0),
           child: Text(
             'Weight Progress: $exerciseName',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.green.shade800,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: Colors.green.shade800),
           ),
         ),
         Expanded(
@@ -436,12 +487,19 @@ class _ProgressViewState extends State<ProgressView> {
               final maxSet = sessionData['maxSet'] as ExerciseSet;
               final totalSets = sessionData['totalSets'] as int;
               final totalVolume = sessionData['totalVolume'] as double;
-              
+
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 4.0,
+                ),
                 elevation: 2,
                 child: InkWell(
-                  onTap: () => _showWorkoutDetails(context, viewModel, sessionData['sessionId']),
+                  onTap: () => _showWorkoutDetails(
+                    context,
+                    viewModel,
+                    sessionData['sessionId'],
+                  ),
                   borderRadius: BorderRadius.circular(12.0),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -453,32 +511,42 @@ class _ProgressViewState extends State<ProgressView> {
                           children: [
                             Text(
                               'Workout ${date.toLocal().toString().split(' ')[0]}',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Colors.grey.shade800,
-                              ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(color: Colors.grey.shade800),
                             ),
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8.0,
+                                    vertical: 4.0,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: Colors.green.shade100,
+                                    color: Colors.green.shade600,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
                                     'Max Working Set',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.green.shade700,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 IconButton(
-                                  icon: Icon(Icons.edit, size: 18, color: Colors.green.shade700),
-                                  onPressed: () => _editWorkout(context, viewModel, sessionData['sessionId']),
+                                  icon: Icon(
+                                    Icons.edit,
+                                    size: 18,
+                                    color: Colors.green.shade700,
+                                  ),
+                                  onPressed: () => _editWorkout(
+                                    context,
+                                    viewModel,
+                                    sessionData['sessionId'],
+                                  ),
                                   tooltip: 'Edit Workout',
                                 ),
                               ],
@@ -515,7 +583,10 @@ class _ProgressViewState extends State<ProgressView> {
                               children: [
                                 Text(
                                   'Total Sets: $totalSets',
-                                  style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade800,
+                                  ),
                                 ),
                                 Text(
                                   'Total Volume: ${totalVolume.toStringAsFixed(1)}kg',
@@ -540,8 +611,14 @@ class _ProgressViewState extends State<ProgressView> {
     );
   }
 
-  void _showWorkoutDetails(BuildContext context, WorkoutSessionViewModel viewModel, String sessionId) {
-    final session = viewModel.completedSessions.firstWhere((s) => s.id == sessionId);
+  void _showWorkoutDetails(
+    BuildContext context,
+    WorkoutSessionViewModel viewModel,
+    String sessionId,
+  ) {
+    final session = viewModel.completedSessions.firstWhere(
+      (s) => s.id == sessionId,
+    );
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -558,44 +635,54 @@ class _ProgressViewState extends State<ProgressView> {
             itemBuilder: (context, index) {
               final exercise = session.exercises[index];
               return Card(
-                color: Colors.green.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        exercise.name,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.green.shade800,
+                color: Colors.white,
+                elevation: 2,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade300, width: 1),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          exercise.name,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: Colors.green.shade800),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      ...exercise.sets.asMap().entries.map((entry) {
-                        final setIndex = entry.key;
-                        final set = entry.value;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2.0),
-                          child: Row(
-                            children: [
-                              Text(
-                                'Set ${setIndex + 1}: ',
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                              Text(
-                                '${set.weight}kg × ${set.reps} reps',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green.shade700,
+                        const SizedBox(height: 8),
+                        ...exercise.sets.asMap().entries.map((entry) {
+                          final setIndex = entry.key;
+                          final set = entry.value;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2.0),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Set ${setIndex + 1}: ',
+                                  style: TextStyle(color: Colors.grey.shade700),
                                 ),
-                              ),
-                              if (set.isCompleted)
-                                const Icon(Icons.check, color: Colors.green, size: 16),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
+                                Text(
+                                  '${set.weight}kg × ${set.reps} reps',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green.shade700,
+                                  ),
+                                ),
+                                if (set.isCompleted)
+                                  const Icon(
+                                    Icons.check,
+                                    color: Colors.green,
+                                    size: 16,
+                                  ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -605,7 +692,10 @@ class _ProgressViewState extends State<ProgressView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Close', style: TextStyle(color: Colors.green.shade700)),
+            child: Text(
+              'Close',
+              style: TextStyle(color: Colors.green.shade700),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -623,14 +713,18 @@ class _ProgressViewState extends State<ProgressView> {
     );
   }
 
-  void _editWorkout(BuildContext context, WorkoutSessionViewModel viewModel, String sessionId) {
+  void _editWorkout(
+    BuildContext context,
+    WorkoutSessionViewModel viewModel,
+    String sessionId,
+  ) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => EditWorkoutView(sessionId: sessionId),
       ),
     );
   }
-  
+
   Widget _buildPersonalRecords() {
     if (widget.records.isEmpty) {
       return Center(
@@ -651,9 +745,9 @@ class _ProgressViewState extends State<ProgressView> {
             children: [
               Text(
                 'Personal Records - Weight Progression',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.green.shade800,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(color: Colors.green.shade800),
               ),
               const SizedBox(height: 4),
               Text(
@@ -672,80 +766,98 @@ class _ProgressViewState extends State<ProgressView> {
             itemBuilder: (context, index) {
               final record = widget.records[index];
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 4.0,
+                ),
                 elevation: selectedExercise == record.exerciseName ? 4.0 : 1.0,
-                color: selectedExercise == record.exerciseName 
-                    ? Colors.green.shade100 
+                color: selectedExercise == record.exerciseName
+                    ? Colors.white
                     : null,
-                child: InkWell(
-                  onTap: () => _selectExercise(record.exerciseName),
-                  borderRadius: BorderRadius.circular(12.0),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              record.exerciseName,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green.shade800,
+                child: Container(
+                  decoration: selectedExercise == record.exerciseName
+                      ? BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.green.shade600,
+                            width: 2,
+                          ),
+                        )
+                      : null,
+                  child: InkWell(
+                    onTap: () => _selectExercise(record.exerciseName),
+                    borderRadius: BorderRadius.circular(12.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                record.exerciseName,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green.shade800,
+                                    ),
                               ),
-                            ),
-                            Icon(
-                              Icons.analytics_outlined,
-                              color: Colors.green.shade600,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Max Weight: ${record.maxWeight}kg',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green.shade700,
+                              Icon(
+                                Icons.analytics_outlined,
+                                color: Colors.green.shade600,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Max Weight: ${record.maxWeight}kg',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green.shade700,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'at ${record.maxReps} reps',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'at ${record.maxReps} reps',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade600,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'Achieved: ${record.achievedDate.toLocal().toString().split(' ')[0]}',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Best Volume: ${record.totalVolume.toStringAsFixed(1)}kg',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Achieved: ${record.achievedDate.toLocal().toString().split(' ')[0]}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade700,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Best Volume: ${record.totalVolume.toStringAsFixed(1)}kg',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -757,12 +869,15 @@ class _ProgressViewState extends State<ProgressView> {
     );
   }
 
-  String _getMuscleGroupInfo(WorkoutSessionViewModel viewModel, String exerciseName) {
+  String _getMuscleGroupInfo(
+    WorkoutSessionViewModel viewModel,
+    String exerciseName,
+  ) {
     for (var session in viewModel.completedSessions) {
       for (var exercise in session.exercises) {
         if (exercise.name == exerciseName) {
           final muscleGroups = <String>[];
-          
+
           if (exercise.primaryMuscleGroup != null) {
             muscleGroups.add('Primary: ${exercise.primaryMuscleGroup}');
           }
@@ -772,7 +887,7 @@ class _ProgressViewState extends State<ProgressView> {
           if (exercise.tertiaryMuscleGroup != null) {
             muscleGroups.add('Tertiary: ${exercise.tertiaryMuscleGroup}');
           }
-          
+
           return muscleGroups.join(', ');
         }
       }
@@ -802,18 +917,18 @@ class _RepCountDotPainter extends FlDotPainter {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawCircle(offsetInCanvas, radius, paint);
-    
+
     if (strokeWidth > 0) {
       final strokePaint = Paint()
         ..color = strokeColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth;
-      
+
       canvas.drawCircle(offsetInCanvas, radius, strokePaint);
     }
-    
+
     final textPainter = TextPainter(
       text: TextSpan(
         text: repCount.toString(),
@@ -825,14 +940,14 @@ class _RepCountDotPainter extends FlDotPainter {
       ),
       textDirection: TextDirection.ltr,
     );
-    
+
     textPainter.layout();
-    
+
     final textOffset = Offset(
       offsetInCanvas.dx - textPainter.width / 2,
       offsetInCanvas.dy - textPainter.height / 2,
     );
-    
+
     textPainter.paint(canvas, textOffset);
   }
 
@@ -845,7 +960,13 @@ class _RepCountDotPainter extends FlDotPainter {
   Color get mainColor => color;
 
   @override
-  List<Object?> get props => [radius, color, strokeWidth, strokeColor, repCount];
+  List<Object?> get props => [
+    radius,
+    color,
+    strokeWidth,
+    strokeColor,
+    repCount,
+  ];
 
   @override
   FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) {
@@ -854,7 +975,8 @@ class _RepCountDotPainter extends FlDotPainter {
         radius: a.radius + (b.radius - a.radius) * t,
         color: Color.lerp(a.color, b.color, t) ?? a.color,
         strokeWidth: a.strokeWidth + (b.strokeWidth - a.strokeWidth) * t,
-        strokeColor: Color.lerp(a.strokeColor, b.strokeColor, t) ?? a.strokeColor,
+        strokeColor:
+            Color.lerp(a.strokeColor, b.strokeColor, t) ?? a.strokeColor,
         repCount: t < 0.5 ? a.repCount : b.repCount,
       );
     }

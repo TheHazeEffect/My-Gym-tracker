@@ -114,6 +114,18 @@ class WorkoutSessionViewModel extends ChangeNotifier {
     }
   }
 
+  void deleteWorkout(String sessionId) {
+    // Find and remove the session from the box
+    for (int i = 0; i < _sessionBox.length; i++) {
+      final session = _sessionBox.getAt(i);
+      if (session != null && session.id == sessionId) {
+        _sessionBox.deleteAt(i);
+        notifyListeners();
+        break;
+      }
+    }
+  }
+
   void _updatePersonalRecords(List<Exercise> exercises) {
     for (var exercise in exercises) {
       if (exercise.sets.isEmpty) continue;

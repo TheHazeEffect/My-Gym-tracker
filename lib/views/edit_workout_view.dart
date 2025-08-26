@@ -4,6 +4,7 @@ import '../models/exercise.dart';
 import '../models/exercise_set.dart';
 import '../models/workout_session.dart';
 import '../viewmodels/workout_session_viewmodel.dart';
+import '../components/add_exercise_dialog.dart';
 
 class EditWorkoutView extends StatefulWidget {
   final String sessionId;
@@ -36,6 +37,7 @@ class _EditWorkoutViewState extends State<EditWorkoutView> {
       id: session.id,
       startTime: session.startTime,
       endTime: session.endTime,
+      isCompleted: session.isCompleted, // Fix: Copy the isCompleted field
       exercises: session.exercises
           .map(
             (exercise) => Exercise(
@@ -121,6 +123,43 @@ class _EditWorkoutViewState extends State<EditWorkoutView> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addNewExercise,
+        backgroundColor: Colors.green.shade700,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('Add Exercise'),
+      ),
+    );
+  }
+
+  void _addNewExercise() {
+    final viewModel = Provider.of<WorkoutSessionViewModel>(
+      context,
+      listen: false,
+    );
+    final historicalExercises = viewModel.historicalExercises;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AddExerciseDialog(
+        historicalExercises: historicalExercises.toSet(),
+        onExerciseSelected: (exerciseName) {
+          setState(() {
+            final newExercise = Exercise(
+              name: exerciseName,
+              sets: [
+                ExerciseSet(
+                  reps: 8,
+                  weight: 20.0,
+                  isCompleted: false,
+                ),
+              ],
+            );
+            editedSession.exercises.add(newExercise);
+          });
+        },
       ),
     );
   }

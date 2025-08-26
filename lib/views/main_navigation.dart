@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'home_view.dart';
+import 'workouts_view.dart';
 import 'progress_view.dart';
-import 'workout_history_view.dart';
 import 'rest_timer_view.dart';
+import 'settings_view.dart';
 import '../viewmodels/personal_record_viewmodel.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -19,13 +19,13 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      const HomeView(),
+      const WorkoutsView(),
       Consumer<PersonalRecordViewModel>(
         builder: (context, recordViewModel, _) =>
             ProgressView(records: recordViewModel.records),
       ),
-      const WorkoutHistoryView(),
       const RestTimerView(),
+      const SettingsView(),
     ];
 
     return Scaffold(
@@ -46,11 +46,8 @@ class _MainNavigationState extends State<MainNavigation> {
             icon: Icon(Icons.trending_up),
             label: 'Progress',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'History',
-          ),
           BottomNavigationBarItem(icon: Icon(Icons.timer), label: 'Timers'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );

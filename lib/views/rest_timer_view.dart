@@ -71,7 +71,7 @@ class RestTimerView extends StatelessWidget {
 
     switch (timer.state) {
       case TimerState.running:
-        cardColor = Colors.green.shade50;
+        cardColor = Colors.white;
         statusIcon = Icons.timer;
         break;
       case TimerState.paused:
@@ -79,7 +79,7 @@ class RestTimerView extends StatelessWidget {
         statusIcon = Icons.pause_circle;
         break;
       case TimerState.completed:
-        cardColor = Colors.green.shade50;
+        cardColor = Colors.white;
         statusIcon = Icons.check_circle;
         break;
     }
@@ -87,7 +87,17 @@ class RestTimerView extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       color: cardColor,
-      child: ListTile(
+      elevation: 2,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: timer.state == TimerState.running
+              ? Border.all(color: Colors.green.shade600, width: 2)
+              : timer.state == TimerState.completed
+                  ? Border.all(color: Colors.green.shade400, width: 1.5)
+                  : null,
+        ),
+        child: ListTile(
         leading: Icon(statusIcon, color: _getStatusColor(timer.state)),
         title: Text(
           timer.name,
@@ -120,6 +130,7 @@ class RestTimerView extends StatelessWidget {
           ],
         ),
         trailing: _buildTimerActions(timer, timerViewModel),
+        ),
       ),
     );
   }

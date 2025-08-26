@@ -20,30 +20,42 @@ class HomeView extends StatelessWidget {
             // Active workout card
             if (sessionViewModel.currentSession != null)
               Card(
-                color: Colors.green.shade100,
+                color: Colors.green.shade50,
+                elevation: 3,
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     children: [
-                      const Icon(
-                        Icons.play_circle_fill,
-                        color: Colors.green,
-                        size: 48,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Workout in Progress',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${sessionViewModel.currentSession!.exercises.length} exercises added',
-                      ),
-                      Text(
-                        'Total Volume: ${sessionViewModel.currentSession!.totalVolume.toStringAsFixed(1)}kg',
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.play_circle_fill,
+                            color: Colors.green.shade600,
+                            size: 32,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Workout in Progress',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '${sessionViewModel.currentSession!.exercises.length} exercises • ${sessionViewModel.currentSession!.totalVolume.toStringAsFixed(0)}kg total',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
@@ -63,106 +75,80 @@ class HomeView extends StatelessWidget {
                 ),
               ),
 
-            // Start workout button
+            // Start workout section
             if (sessionViewModel.currentSession == null) ...[
-              const Icon(Icons.fitness_center, size: 80, color: Colors.green),
-              const SizedBox(height: 24),
-              const Text(
-                'Ready to start your workout?',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Track your exercises, sets, and progress',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    sessionViewModel.startWorkout();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const WorkoutDetailsView(),
+              Column(
+                children: [
+                  Icon(
+                    Icons.fitness_center, 
+                    size: 64, 
+                    color: Colors.green.shade600,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Ready to start your workout?',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Track exercises, sets, and progress',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 28),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        sessionViewModel.startWorkout();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const WorkoutDetailsView(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.play_arrow, size: 24),
+                      label: const Text(
+                        'Start Workout',
+                        style: TextStyle(fontSize: 16),
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.play_arrow, size: 28),
-                  label: const Text(
-                    'Start Workout',
-                    style: TextStyle(fontSize: 18),
+                    ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    // Uses theme colors from main.dart
-                  ),
-                ),
+                ],
               ),
             ],
 
-            // Temporary: Add dummy data button
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                sessionViewModel.addDummyData();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Realistic workout data added!'),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-              child: const Text('Add Sample Workout Data'),
-            ),
-
-            // Clear data button (for testing)
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                sessionViewModel.clearAllData();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('All data cleared!')),
-                );
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Clear All Data'),
-            ),
-
-            // Completed sessions summary
+            // Quick stats summary (only if there are completed sessions)
             if (sessionViewModel.completedSessions.isNotEmpty) ...[
               const SizedBox(height: 32),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  child: Column(
                     children: [
-                      Column(
-                        children: [
-                          Text(
-                            '${sessionViewModel.completedSessions.length}',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Text('Workouts'),
-                        ],
+                      Text(
+                        'Workout Summary',
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      Column(
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          Text(
-                            '${sessionViewModel.historicalExercises.length}',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          _buildStatColumn(
+                            '${sessionViewModel.completedSessions.length}',
+                            'Total Workouts',
                           ),
-                          const Text('Exercises'),
+                          _buildStatColumn(
+                            '${sessionViewModel.historicalExercises.length}',
+                            'Unique Exercises',
+                          ),
                         ],
                       ),
                     ],
@@ -173,6 +159,28 @@ class HomeView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildStatColumn(String value, String label) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.green,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+          ),
+        ),
+      ],
     );
   }
 }
